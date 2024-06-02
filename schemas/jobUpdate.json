@@ -1,0 +1,25 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": "string",
+            "default": "",
+            "title": "The title Schema"
+        },
+        "salary": {
+            "type": "integer",
+            "default": 0,
+            "title": "The salary Schema"
+        },
+        "equity": {
+            "type": "integer",
+            "default": 0,
+            "title": "The equity Schema"
+        }
+    },
+    "additionalProperties": false,
+    "required": []
+}
+
