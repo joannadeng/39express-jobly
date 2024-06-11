@@ -60,7 +60,6 @@ class Job {
         if(title){
           paramsArr.push(`%${title}%`),
           conditionArr.push(`title ILIKE $${paramsArr.length}`)
-        
         }
         if(minSalary){
           paramsArr.push(minSalary);
@@ -72,6 +71,7 @@ class Job {
 
         let jobsRes;
         if(conditionArr.length > 0) {
+          console.log(paramsArr)
         const  whereCondition = conditionArr.join(' AND ');
          jobsRes = await db.query(`${query} WHERE ${whereCondition} ORDER BY id`, paramsArr);
         }else{
@@ -83,7 +83,7 @@ class Job {
         if(jobsRes.rows.length !== 0) {
               return jobsRes.rows;
         }else{
-              throw new BadRequestError("Not Found")
+              throw new NotFoundError("Not Found")
         };
 
 

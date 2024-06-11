@@ -56,61 +56,15 @@ router.get("/", async function (req, res, next) {
   const name = req.query.name;
   const min = req.query.minEmployees;
   const max = req.query.maxEmployees;
-  try {
-    if(min && !max && !name) {
-      const companies = await Company.filByMinNum(parseInt(min));
-      return res.json({ companies });
-    }else if(max && !min && !name) {
-      const companies = await Company.filByMaxNum(parseInt(max));  
-      return res.json({ companies });
-    }else if(name && !min && !max) {
-      const companies = await Company.filByName(name);
-      return res.json({ companies });
-    }else if(name && min && !max) {
-      const companies = await Company.filByNameNMinNum(name, parseInt(min));
-      return res.json({ companies });
-    }else  if(name && max && !min) {
-      const companies = await Company.filByNameNMaxNum(name,parseInt(max));
-      return res.json({ companies });
-    }else if(name && min && max) {
-      const companies = await Company.filByNameNNum(name,parseInt(min),parseInt(max));
-      return res.json({ companies });
-    }else if(min && max && !name) {
-      const companies = await Company.filByNum(parseInt(min),parseInt(max));
-      return res.json({ companies });
-    }
-    const companies = await Company.findAll();
+  
+  let filters = {name, min, max}
+  try{
+    const companies = await Company.findAll(filters);
     return res.json({ companies });
   } catch (err) {
     return next(err);
   }
 });
-
-
-// router.get("/:name?/:minEmployees?/:maxEmployees?", async function (req, res,next) {
-//   try{
-//     const name = req.params.name;
-//     const minEmployees = req.params.minEmployees;
-//     const maxEmployees = req.params.maxEmployees;
-    
-//     if(name && minEmployees && maxEmployees) {
-//       const companies = await Company.filByNameNNum(name,parseInt(minEmployees),parseInt(maxEmployees))
-//       return res.json({companies})
-//     }else if(name && minEmployees){
-//       const companies = await Company.filByNameNMinNum(name, parseInt(minEmployees));
-//       return res.json({ companies });
-//     }
-//     else if(name){
-//       const companies = await Company.filByName(name);
-//       return res.json({ companies });
-//     }else{
-//       const companies = await Company.findAll();
-//       return res.json({ companies });
-//     }
-//   }catch(err){
-//     return next(err);
-//   }
-// })
 
 /** GET /[handle]  =>  { company }
  *

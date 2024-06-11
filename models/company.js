@@ -50,232 +50,43 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
-    const companiesRes = await db.query(
-          `SELECT handle,
+  static async findAll(params) {
+    const {name, min, max} = params;
+    let conditionArr = [];
+    let paramsArr = [];
+    const query = `SELECT handle,
                   name,
                   description,
                   num_employees AS "numEmployees",
                   logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
-    return companiesRes.rows;
-  }
-/** 
- * Find company filter by name.
- * 
- * Pass in a string, return all companies whose name contains that string, case
- * case insensitive;
- * 
- * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
- * */ 
-  static async filByName(name) {
-    const companiesRes = await db.query(
-      `SELECT handle,
-              name,
-              description,
-              num_employees AS "numEmployees",
-              logo_url AS "logoUrl"
-       FROM companies
-       WHERE name ILIKE $1
-       ORDER BY name`,[`%${name}%`]
-    );
-    if(companiesRes.rows.length === 0){
-      throw new NotFoundError(`No company includes ${name}`)
+           FROM companies`;
+    
+    if(name) {
+      paramsArr.push(`%${name}%`);
+      conditionArr.push(`name ILIKE $${paramsArr.length}`);
+    };
+    if(min) {
+      paramsArr.push(parseInt(min));
+      conditionArr.push(`num_employees >= $${paramsArr.length}`);
+    };
+    if(max) {
+      paramsArr.push(parseInt(max));
+      conditionArr.push(`num_employees <= $${paramsArr.length}`);
+    };
+
+    let companiesRes;
+    if(conditionArr.length > 0) {
+      const whereCondition = conditionArr.join(' AND ');
+      companiesRes = await db.query(`${query} WHERE ${whereCondition}  ORDER BY name`, paramsArr);
+    }else{
+      companiesRes = await db.query(`${query} ORDER BY name`)
+    };
+
+    if(companiesRes.rows.length === 0) {
+      throw new NotFoundError(`Company Not Found`);
+    }else{
+      return companiesRes.rows;
     }
-    // how to use $1 here ?
-    return companiesRes.rows;
-  }
-
-/**
- * Find company filter by min number.
- * 
- * Pass in a number, return all companies whose employee number is larger than or equal to this number.
- * 
- * Return [{ handle, name, description, numEmployees, logoUrl }, ...]
- * 
- * */ 
-
-  static async filByMinNum(minNum) {
-    const companiesRes = await db.query(
-      `SELECT handle,
-              name,
-              description,
-              num_employees AS "numEmployees",
-              logo_url AS "logoUrl"
-      FROM companies
-      WHERE num_employees >= $1
-      ORDER BY name`,
-      [minNum]
-    );
-
-    if (companiesRes.rows.length === 0) {
-      throw new NotFoundError(`No such company`)
-    }
-
-    return companiesRes.rows;
-  }
-
-  /**
- * Find company filter by max number.
- * 
- * Pass in a number, return all companies whose employee number is smaller than this number.
- * 
- * Return [{ handle, name, description, numEmployees, logoUrl }, ...]
- * 
- * */ 
-
-  static async filByMaxNum(maxNum) {
-    const companiesRes = await db.query(
-      `SELECT handle,
-              name,
-              description,
-              num_employees AS "numEmployees",
-              logo_url AS "logoUrl"
-      FROM companies
-      WHERE num_employees < $1
-      ORDER BY name`,
-      [maxNum]
-    );
-
-    if (companiesRes.rows.length === 0) {
-      throw new NotFoundError(`No such company`)
-    }
-
-    return companiesRes.rows;
-  }
-
-  /**
- * Find company filter by name and minimal number.
- * 
- * Pass in a string and a number, return all companies whose name contains the string and whose employee number is larger than or equal to this number.
- * 
- * Return [{ handle, name, description, numEmployees, logoUrl }, ...]
- * 
- * */ 
-
-  static async filByNameNMinNum(name,minNum) {
-    const companiesRes = await db.query(
-      `SELECT handle,
-              name,
-              description,
-              num_employees AS "numEmployees",
-              logo_url AS "logoUrl"
-      FROM companies
-      WHERE (name ILIKE $1 
-      AND
-      num_employees >= $2)
-      ORDER BY name`,
-      [`%${name}%`,minNum]
-    );
-
-    if (companiesRes.rows.length === 0) {
-      throw new NotFoundError(`No such company`)
-    }
-
-    return companiesRes.rows;
-  }
-
-  /**
- * Find company filter by name and max number.
- * 
- * Pass in a string and a number, return all companies whose name contains this string and whose employee number is smaller than this number.
- * 
- * Return [{ handle, name, description, numEmployees, logoUrl }, ...]
- * 
- * */ 
-
-  static async filByNameNMaxNum(name,maxNum) {
-    const companiesRes = await db.query(
-      `SELECT handle,
-              name,
-              description,
-              num_employees AS "numEmployees",
-              logo_url AS "logoUrl"
-      FROM companies
-      WHERE (name ILIKE $1
-      AND
-      num_employees < $2)
-      ORDER BY name`,
-      [`%${name}%`,maxNum]
-    );
-
-    if (companiesRes.rows.length === 0) {
-      throw new NotFoundError(`No such company`)
-    }
-
-    return companiesRes.rows;
-  }
-
-  /**
- * Find company filter by min and max number.
- * 
- * Pass in a min number and a max number, return all companies whose number is between min number and max number.
- * 
- * Return [{ handle, name, description, numEmployees, logoUrl }, ...]
- * 
- * */ 
-
-  static async filByNum(minNum,maxNum) {
-    if(minNum > maxNum) {
-      throw new BadRequestError("please input valid min number", 400)
-    }
-    const companiesRes = await db.query(
-      `SELECT handle,
-              name,
-              description,
-              num_employees AS "numEmployees",
-              logo_url AS "logoUrl"
-      FROM companies
-      WHERE (
-      num_employees >= $1
-      AND
-      num_employees < $2)
-      ORDER BY name`,
-      [minNum,maxNum]
-    );
-
-    if (companiesRes.rows.length === 0) {
-      throw new NotFoundError(`No such company`, 404)
-    }
-
-    return companiesRes.rows;
-  }
-
-  /**
- * Find company filter by name and number.
- * 
- * Pass in a string, a min number and a max number, return all companies whose name contains a string, whose employee number is larger than min number and small than max number.
- * 
- * Return [{ handle, name, description, numEmployees, logoUrl }, ...]
- * 
- * */ 
-
-  static async filByNameNNum(name,minNum,maxNum) {
-    if(minNum > maxNum) {
-      throw new BadRequestError("please input valid min number", 400)
-    }
-    const companiesRes = await db.query(
-      `SELECT handle,
-              name,
-              description,
-              num_employees AS "numEmployees",
-              logo_url AS "logoUrl"
-      FROM companies
-      WHERE (name ILIKE '%${name}%' 
-      AND
-      num_employees >= $1
-      AND
-      num_employees < $2)
-      ORDER BY name`,
-      [minNum,maxNum]
-    );
-
-    if (companiesRes.rows.length === 0) {
-      throw new NotFoundError(`No such company`, 404)
-    }
-
-    return companiesRes.rows;
   }
 
 
