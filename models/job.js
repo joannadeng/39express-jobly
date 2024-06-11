@@ -50,160 +50,103 @@ class Job {
        *
        * Returns [{ id, title, salary, equity, company_handle }, ...]
        * */
-    
-      static async findAll() {
-        const jobsRes = await db.query(
-              `SELECT id, title, salary, equity, company_handle
-               FROM jobs
-               ORDER BY id`);
-        return jobsRes.rows;
-      }
-
-      /**
-       * Find jobs contains passed in title.
-       * 
-       * Return [{ id, title, salary, equity, company_handle},...]
-      * */
-
-      static async filByTitle(title) {
-        const jobsRes = await db.query(
-            `SELECT id, title, salary, equity, company_handle
-            FROM jobs
-            WHERE title ILIKE $1
-            ORDER BY id`, [`%${title}%`]
-        );
-        if(jobsRes.rows.length === 0){
-            throw new BadRequestError("no such job title")
-        }
-        return jobsRes.rows;
-      }
-
-      /**
-       * 
-       * Find jobs has min salary
-       * 
-       * Return [{ id, title, salary, equity, company_handle},...]
-       * */ 
-
-      static async filByMin(minSalary) {
-        const jobsRes = await db.query(
-            `SELECT id, title, salary, equity, company_handle
-            FROM jobs
-            WHERE salary >= $1
-            ORDER BY id`, [minSalary]
-        )
-        if(jobsRes. rows.length === 0) {
-            throw new BadRequestError(`no job salary greater than : ${minSalary}`,400 )
-        }
-        return jobsRes.rows;
-      }
-
-      /**
-       * 
-       * Find jobs by filtering equity
-       * 
-       * Return [{ id, title, salary, equity, company_handle},...]
-       * 
-       * */ 
-
-      static async filByEquity(hasEquity) {
-        if(hasEquity === "true") {
-            const jobsRes = await db.query(
-                `SELECT id, title, salary, equity, company_handle
-                FROM jobs
-                WHERE equity != '0'
-                ORDER BY id`,
-            )
-            if(jobsRes.rows.length === 0) {
-                throw new BadRequestError("No found")
-            }
-            return jobsRes.rows;
-        }else{
-            const jobs = await this.findAll();
-            return jobs;
-        }
+    // refactor 
+      static async find(params) {
+        const {title, minSalary, hasEquity} = params;
+        const query = `SELECT id, title, salary, equity, company_handle
+            FROM jobs`;
+        let paramsArr = [];
+        let conditionArr = [];
+        if(title){
+          paramsArr.push(`%${title}%`),
+          conditionArr.push(`title ILIKE $${paramsArr.length}`)
         
-      }
-
-      /**
-       * 
-       * Find jobs includes title term with min salary
-       * 
-       * Return [{ id, title, salary, equity, company_handle},...]
-       * 
-       * */ 
-
-      static async filByTitleNMin(title, minSalary) {
-        const jobsRes = await db.query(
-          `SELECT id, title, salary, equity, company_handle
-          FROM jobs
-          WHERE (title ILIKE $1
-          AND
-          salary >= $2)
-          ORDER BY id`,[`%${title}%`,minSalary]
-      );
-      if(jobsRes.rows.length === 0) {
-        throw new BadRequestError(`no such job title`,400 )
-      }
-       return jobsRes.rows;
-      }
-
-       /**
-       * 
-       * Find jobs includes title term with equity
-       * 
-       * Return [{ id, title, salary, equity, company_handle},...]
-       * 
-       * */ 
-
-
-      static async filByTitleNEquity(title, hasEquity) {
-        if(hasEquity === "true") {
-          const jobsRes = await db.query(
-              `SELECT id, title, salary, equity, company_handle
-              FROM jobs
-              WHERE (title ILIKE $1
-              AND equity != 0)
-              ORDER BY id`,[`%${title}%`]
-          )
-          if(jobsRes.rows.length === 0) {
-              throw new BadRequestError("No found such job title")
-          }
-          return jobsRes.rows;
-        }else{
-          const jobs = await this.filByTitle(title);
-          return jobs;
         }
-      }
-
-       /**
-       * 
-       * Find jobs includes title term with min salary and equity
-       * 
-       * Return [{ id, title, salary, equity, company_handle},...]
-       * 
-       * */ 
-
-
-      static async filByAll(title, minSalary, hasEquity) {
-        if(hasEquity === "true") {
-          const jobsRes = await db.query(
-              `SELECT id, title, salary, equity, company_handle
-              FROM jobs
-              WHERE (title ILIKE $1
-              AND salary >= $2
-              AND equity != 0)
-              ORDER BY id`,[`%${title}%`,minSalary]
-          )
-          if(jobsRes.rows.length === 0) {
-              throw new BadRequestError("No found such job title")
-          }
-          return jobsRes.rows;
-        }else{
-          const jobs = await this.filByTitleNMin(title,minSalary);
-          return jobs;
+        if(minSalary){
+          paramsArr.push(minSalary);
+          conditionArr.push(`salary > $${paramsArr.length}`);
         }
-      }
+        if((hasEquity+'').toLowerCase() === "true"){
+          conditionArr.push(`equity > 0`)
+        };
+
+        let jobsRes;
+        if(conditionArr.length > 0) {
+        const  whereCondition = conditionArr.join(' AND ');
+         jobsRes = await db.query(`${query} WHERE ${whereCondition} ORDER BY id`, paramsArr);
+        }else{
+           jobsRes = await db.query(
+                    `${query} 
+                     ORDER BY id`);
+        };
+
+        if(jobsRes.rows.length !== 0) {
+              return jobsRes.rows;
+        }else{
+              throw new BadRequestError("Not Found")
+        };
+
+
+// my first version 
+      //   if(title && minSalary && (hasEquity === "true")) {
+      //     jobsRes = await db.query(
+      //       `${query} 
+      //       WHERE (title ILIKE $1
+      //       AND salary >= $2
+      //       AND equity != 0)
+            // ORDER BY id`,[`%${title}%`,minSalary]
+      //   );
+      // } else if(title && minSalary) {
+      //     jobsRes = await db.query(
+      //       `${query} 
+      //       WHERE (title ILIKE $1
+      //       AND
+      //       salary >= $2)
+      //       ORDER BY id`,[`%${title}%`,minSalary]
+      //   );
+      // } else if(title && (hasEquity === "true")) {
+      //   jobsRes = await db.query(
+      //     `${query} 
+      //     WHERE (title ILIKE $1
+      //     AND equity != 0)
+      //     ORDER BY id`,[`%${title}%`]
+      // );
+      // } else if ( minSalary && (hasEquity === "true")){
+      //   jobsRes = await db.query(
+      //     `${query} 
+      //     WHERE salary >= $1
+      //     AND equity != 0
+      //     ORDER BY id`,[minSalary]
+      // );
+      // }else if(title) {
+      //     jobsRes = await db.query(
+      //       `${query} 
+      //       WHERE title ILIKE $1
+      //       ORDER BY id`, [`%${title}%`]
+      //   );
+      //   } else if (minSalary ) {
+      //     jobsRes = await db.query(
+      //       `${query} 
+      //       WHERE salary >= $1
+      //       ORDER BY id`, [minSalary]
+      //   );
+      //  } else if(hasEquity === "true") {
+      //     jobsRes = await db.query(
+      //       `${query} 
+      //       WHERE equity != '0'
+      //       ORDER BY id`,
+      //   )
+      //   } else{
+      //    jobsRes = await db.query(
+      //         `${query} 
+      //          ORDER BY id`);
+      //   // return jobsRes.rows;
+      // }
+      // if(jobsRes.rows.length === 0){
+      //         throw new BadRequestError("Not Found")
+      //     }
+      //     return jobsRes.rows;
+    }
 
       
       

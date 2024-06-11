@@ -5,7 +5,7 @@
 const jsonschema = require("jsonschema");
 
 const express = require("express");
-const { ensureLoggedIn, ensureAdmin } = require("../middleware/auth");
+const { ensureLoggedInOrAdmin, ensureLoggedIn, ensureAdmin } = require("../middleware/auth");
 const { BadRequestError } = require("../expressError");
 const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
@@ -53,7 +53,7 @@ router.post("/", ensureAdmin, async function (req, res, next) {
  * 
  * */ 
 
-router.post("/:username/jobs/:id",ensureLoggedIn, ensureAdmin, async function (req, res, next) {
+router.post("/:username/jobs/:id", ensureLoggedInOrAdmin, async function (req, res, next) {
   try {
     const job = await User.applyJob(req.params.username, req.params.id);
     return res.json({applied: req.params.id})
@@ -87,7 +87,7 @@ router.get("/", ensureAdmin, async function (req, res, next) {
  * Authorization required: admin
  **/
 
-router.get("/:username", ensureLoggedIn, ensureAdmin, async function (req, res, next) {
+router.get("/:username", ensureLoggedInOrAdmin , async function (req, res, next) {
   try {
     const user = await User.get(req.params.username);
     return res.json({ user });
@@ -107,7 +107,7 @@ router.get("/:username", ensureLoggedIn, ensureAdmin, async function (req, res, 
  * Authorization required: current login user or admins;
  **/
 
-router.patch("/:username", ensureLoggedIn, ensureAdmin, async function (req, res, next) {
+router.patch("/:username", ensureLoggedInOrAdmin , async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, userUpdateSchema);
     if (!validator.valid) {
@@ -128,7 +128,7 @@ router.patch("/:username", ensureLoggedIn, ensureAdmin, async function (req, res
  * Authorization required: current login user or admins;
  **/
 
-router.delete("/:username", ensureLoggedIn, ensureAdmin, async function (req, res, next) {
+router.delete("/:username", ensureLoggedInOrAdmin, async function (req, res, next) {
   try {
     await User.remove(req.params.username);
     return res.json({ deleted: req.params.username });

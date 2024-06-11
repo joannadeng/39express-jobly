@@ -50,32 +50,18 @@ router.get("/", async function (req, res, next) {
     const title = req.query.title;
     const minSalary = req.query.minSalary;
     const hasEquity = req.query.hasEquity;
-  try {
-    if(title && !minSalary && !hasEquity){
-        const jobs = await Job.filByTitle(title);
-        return res.json({jobs})
-    }else if(minSalary && !title && !hasEquity) {
-        const jobs = await Job.filByMin(minSalary);
-        return res.json({jobs});
-    }else if(hasEquity && !title && !minSalary) {
-        const jobs = await Job.filByEquity(hasEquity);
-        return res.json({jobs});
-    }else if(title && minSalary && !hasEquity) {
-      const jobs = await Job.filByTitleNMin(title, minSalary);
-      return res.json({jobs});
-    }else if(title && hasEquity && !minSalary) {
-      const jobs = await Job.filByTitleNEquity(title,hasEquity);
-      return res.json({jobs});
-    }else if(title && hasEquity && minSalary) {
-      const jobs = await Job.filByAll(title, minSalary, hasEquity);
-      return res.json({jobs});
-    }
-    const jobs = await Job.findAll();
-    return res.json({ jobs });
-  } catch (err) {
-    return next(err);
-  }
+
+let filters = {title,minSalary,hasEquity}
+try{
+  const jobs = await Job.find(filters);
+  return res.json({jobs});
+}catch (err) {
+  return next(err);
+}
 });
+
+
+
 
 /** GET /[id]  =>  { job }
  *

@@ -50,8 +50,6 @@ router.post("/register", async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, userRegisterSchema);
     if (!validator.valid) {
-      console.log("this is validator")
-      console.log(req.body)
       const errs = validator.errors.map(e => e.stack);
       throw new BadRequestError(errs);
     }
