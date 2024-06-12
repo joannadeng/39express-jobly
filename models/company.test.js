@@ -59,8 +59,9 @@ describe("create", function () {
 /************************************** findAll */
 
 describe("findAll", function () {
-  test("works: no filter", async function () {
-    let companies = await Company.findAll();
+
+  test("works: no parameters", async function () {
+    let companies = await Company.findAll({});
     expect(companies).toEqual([
       {
         handle: "c1",
@@ -86,101 +87,10 @@ describe("findAll", function () {
     ]);
   });
 
-  test("filter by name", async function() {
-    let companies = await Company.filByName("C1");
+  test("works: optional parameters", async function () {
+    const name = "c"
+    let companies = await Company.findAll({name});
     expect(companies).toEqual([
-      {
-        handle: "c1",
-        name: "C1",
-        description: "Desc1",
-        numEmployees: 1,
-        logoUrl: "http://c1.img",
-      }
-    ]);
-  });
-
-  test("filter by min number", async function() {
-    let companies = await Company.filByMinNum(3);
-    expect(companies).toEqual([
-      {
-        handle: "c3",
-        name: "C3",
-        description: "Desc3",
-        numEmployees: 3,
-        logoUrl: "http://c3.img",
-      }
-    ]);
-  });
-
-  test("filter by max number", async function() {
-    let companies = await Company.filByMaxNum(2);
-    expect(companies).toEqual([
-      {
-        handle: "c1",
-        name: "C1",
-        description: "Desc1",
-        numEmployees: 1,
-        logoUrl: "http://c1.img",
-      }
-    ]);
-  });
-
-  test("filter by name and min number", async function() {
-    let companies = await Company.filByNameNMinNum('c',3);
-    expect(companies).toEqual([
-      {
-        handle: "c3",
-        name: "C3",
-        description: "Desc3",
-        numEmployees: 3,
-        logoUrl: "http://c3.img",
-      }
-    ]);
-  });
-
-  test("filter by name and max number", async function() {
-    let companies = await Company.filByNameNMaxNum('c',3);
-    expect(companies).toEqual([
-      {
-        handle: "c1",
-        name: "C1",
-        description: "Desc1",
-        numEmployees: 1,
-        logoUrl: "http://c1.img",
-      },
-      {
-        handle: "c2",
-        name: "C2",
-        description: "Desc2",
-        numEmployees: 2,
-        logoUrl: "http://c2.img",
-      }
-    ])
-  });
-
-  test("filter by min and max number", async function(){
-    let companies = await Company.filByNum(1,3);
-    expect(companies).toEqual([
-      {
-        handle: "c1",
-        name: "C1",
-        description: "Desc1",
-        numEmployees: 1,
-        logoUrl: "http://c1.img",
-      },
-      {
-        handle: "c2",
-        name: "C2",
-        description: "Desc2",
-        numEmployees: 2,
-        logoUrl: "http://c2.img",
-      }
-    ]);
-  });
-
-  test("filter by name and numbers", async function() {
-    let companies = await Company.filByNameNNum('c',1,4);
-    expect(companies). toEqual([
       {
         handle: "c1",
         name: "C1",
@@ -204,7 +114,27 @@ describe("findAll", function () {
       },
     ]);
   });
-});
+
+  test("works: optional parameters", async function () {
+    const min = "3"
+    let companies = await Company.findAll({min});
+    expect(companies).toEqual([
+      {
+        handle: "c3",
+        name: "C3",
+        description: "Desc3",
+        numEmployees: 3,
+        logoUrl: "http://c3.img",
+      },
+    ]);
+  });
+
+  // ?????
+  test("Not Found", function () { 
+    const Operation = () => {Company.findAll({min:"4"})};
+    expect( Operation).toThrow( new NotFoundError("Company Not Found"));
+  });
+})
 
 /************************************** get */
 

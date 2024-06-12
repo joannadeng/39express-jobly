@@ -177,6 +177,13 @@ describe("GET /companies", function () {
           numEmployees: 2,
           logoUrl: "http://c2.img",
         },
+        {
+          handle: "c3",
+          name: "C3",
+          description: "Desc3",
+          numEmployees: 3,
+          logoUrl: "http://c3.img",
+        },
       ]
     })
   })

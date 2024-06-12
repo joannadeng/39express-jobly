@@ -57,10 +57,10 @@ describe("create", function () {
 
 /************************************** findAll */
 
-describe("findAll", function () {
+describe("find", function () {
   test("works: no filter", async function () {
-    let companies = await Job.findAll();
-    expect(companies).toEqual([
+    let jobs = await Job.find({});
+    expect(jobs).toEqual([
         {
             id:expect.any(Number),
             title:"j1",
@@ -85,92 +85,24 @@ describe("findAll", function () {
     ]);
   });
 
-  test("filter by title", async function() {
-    let jobs = await Job.filByTitle("j1");
+  test("works: optional params", async function() {
+    const title = "j3";
+    let jobs = await Job.find({title});
     expect(jobs).toEqual([
-      {
-        id:expect.any(Number),
-        title:"j1",
-        salary:2222,
-        equity:"0",
-        company_handle:"c1"
-      }
-    ]);
-  });
-
-  test("filter by minSalary", async function() {
-    let jobs = await Job.filByMin(3333);
-    expect(jobs).toEqual([
-        {
-            id:expect.any(Number),
-            title:"j2",
-            salary:3333,
-            equity:"0",
-            company_handle:"c2"
-        },
-        {
-            id:expect.any(Number),
+            {id:expect.any(Number),
             title:"j3",
             salary:4444,
             equity:"0.1",
             company_handle:"c3"
-        },
-    ]);
-  });
+  }])
+  })
 
-  test("filter by title and min salary", async function() {
-    let jobs = await Job.filByTitleNMin("j",4444);
-    expect(jobs).toEqual([
-        {
-            id:expect.any(Number),
-            title:"j3",
-            salary:4444,
-            equity:"0.1",
-            company_handle:"c3"
-        },
-    ]);
-  });
-
-  test("filter by hasEquity", async function() {
-    let jobs = await Job.filByEquity("true");
-    expect(jobs).toEqual([
-      {
-        id:expect.any(Number),
-            title:"j3",
-            salary:4444,
-            equity:"0.1",
-            company_handle:"c3"
-      }
-    ]);
-  });
-
-  test("filter by title and equity ", async function() {
-    let jobs = await Job.filByTitleNEquity('j',"true");
-    expect(jobs).toEqual([
-      {
-        id:expect.any(Number),
-            title:"j3",
-            salary:4444,
-            equity:"0.1",
-            company_handle:"c3"
-      }
-    ])
-  });
-
-  test("filter by title, min salary and equity ", async function() {
-    let jobs = await Job.filByAll('j',4000,"true");
-    expect(jobs).toEqual([
-      {
-        id:expect.any(Number),
-            title:"j3",
-            salary:4444,
-            equity:"0.1",
-            company_handle:"c3"
-      }
-    ]);
-  });
+  // ?????
+  test("job not found", async function() {
+    const Operation = ()=>{Job.find({minSalary:"5555"})};
+    expect(Operation).toThrow(new NotFoundError("Not Found"));
 });
-
+});
 /************************************** get */
 
 describe("get", function () {
